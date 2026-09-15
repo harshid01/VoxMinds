@@ -1,12 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
 
+from app.database import Base, engine, get_db
+from app import db_models
 from app.models import AnswerExtractionRequest
 from app.services.profile_extractor import extract_profile
 from app.services.interview_engine import get_next_question
-from sqlalchemy.orm import Session
-from fastapi import Depends
-
+from app.services.skill_normalizer import normalize_skills
+from app.services.competency_mapper import (map_skills_to_competencies)
+from app.services.job_role_matcher import match_job_roles
 
 app = FastAPI(
     title="VoxMinds API",
@@ -89,4 +92,74 @@ def get_job_roles(
             }
             for role in roles
         ],
+    }
+
+@app.post("/api/skills/normalize")
+def normalize_skill_endpoint(data: dict):
+    text = data.get("text", "")
+
+    if not text.strip():
+        return {
+            "success": False,
+            "message": "Text is required",
+            "skills": [],
+        }
+
+    skills = normalize_skills(text)
+
+    return {
+        "success": True,
+        "input": text,
+        "count": len(skills),
+        "skills": skills,
+    }
+@app.post("/api/skills/map-competencies")
+def map_skill_competencies(data: dict):
+    skills = data.get("skills", [])
+
+    if not skills:
+        return {
+            "success": False,
+            "message": "Skills are required",
+            "mappings": [],
+        }
+
+    mappings = map_skills_to_competencies(skills)
+
+    return {
+        "success": True,
+        "skills": skills,
+        "mappings": mappings,
+    }
+
+@app.post("/api/job-roles/recommend")
+def recommend_job_roles(
+    data: dict,
+    db: Session = Depends(get_db)
+):
+    skills = data.get("skills", [])
+
+    if not skills:
+        return {
+            "success": False,
+            "message": "Skills are required",
+            "recommendations": [],
+        }
+
+    job_roles = (
+        db.query(db_models.JobRole)
+        .all()
+    )
+
+    recommendations = match_job_roles(
+        skills=skills,
+        job_roles=job_roles,
+        top_k=5
+    )
+
+    return {
+        "success": True,
+        "skills": skills,
+        "count": len(recommendations),
+        "recommendations": recommendations,
     }

@@ -1,4 +1,4 @@
-import re
+from app.services.skill_normalizer import normalize_skills
 
 
 def extract_profile(transcript: str):
@@ -19,10 +19,8 @@ def extract_profile(transcript: str):
     # Education
     if "12th" in text or "twelfth" in text:
         profile["education"] = "12th"
-
     elif "10th" in text or "tenth" in text:
         profile["education"] = "10th"
-
     elif "graduate" in text or "graduation" in text:
         profile["education"] = "Graduate"
 
@@ -43,6 +41,14 @@ def extract_profile(transcript: str):
             profile["family_occupation"] = occupation.title()
             break
 
+    # Skill normalization
+    normalized_skills = normalize_skills(transcript)
+
+    profile["skills"] = [
+        skill["canonical"]
+        for skill in normalized_skills
+    ]
+
     # Interests
     interests = [
         "electrical",
@@ -57,7 +63,9 @@ def extract_profile(transcript: str):
 
     for interest in interests:
         if interest in text:
-            profile["interests"].append(interest.title())
+            profile["interests"].append(
+                interest.title()
+            )
 
     # Employment preference
     if "business" in text or "self employment" in text:
@@ -66,7 +74,7 @@ def extract_profile(transcript: str):
     elif "job" in text or "employment" in text:
         profile["employment_preference"] = "wage_employment"
 
-    # Mobility
+    # Mobility constraints
     mobility_keywords = [
         "cannot travel",
         "can't travel",
@@ -77,6 +85,8 @@ def extract_profile(transcript: str):
 
     for keyword in mobility_keywords:
         if keyword in text:
-            profile["mobility_constraints"].append(keyword)
+            profile["mobility_constraints"].append(
+                keyword
+            )
 
     return profile
