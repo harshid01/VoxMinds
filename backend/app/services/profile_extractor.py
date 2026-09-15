@@ -1,92 +1,26 @@
 from app.services.skill_normalizer import normalize_skills
 
-
 def extract_profile(transcript: str):
     text = transcript.lower()
-
-    profile = {
-        "education": None,
-        "family_occupation": None,
-        "current_livelihood": None,
-        "skills": [],
-        "interests": [],
-        "mobility_constraints": [],
-        "employment_preference": None,
-        "district": None,
-        "state": None,
-    }
-
-    # Education
-    if "12th" in text or "twelfth" in text:
-        profile["education"] = "12th"
-    elif "10th" in text or "tenth" in text:
-        profile["education"] = "10th"
-    elif "graduate" in text or "graduation" in text:
-        profile["education"] = "Graduate"
-
-    # Family occupation
-    occupations = [
-        "electrician",
-        "farmer",
-        "tailor",
-        "carpenter",
-        "plumber",
-        "driver",
-        "mason",
-        "welder",
-    ]
-
-    for occupation in occupations:
-        if occupation in text:
-            profile["family_occupation"] = occupation.title()
-            break
-
-    # Skill normalization
-    normalized_skills = normalize_skills(transcript)
-
-    profile["skills"] = [
-        skill["canonical"]
-        for skill in normalized_skills
-    ]
-
-    # Interests
-    interests = [
-        "electrical",
-        "farming",
-        "tailoring",
-        "carpentry",
-        "plumbing",
-        "driving",
-        "welding",
-        "computer",
-    ]
-
-    for interest in interests:
-        if interest in text:
-            profile["interests"].append(
-                interest.title()
-            )
-
-    # Employment preference
-    if "business" in text or "self employment" in text:
-        profile["employment_preference"] = "self_employment"
-
-    elif "job" in text or "employment" in text:
-        profile["employment_preference"] = "wage_employment"
-
-    # Mobility constraints
-    mobility_keywords = [
-        "cannot travel",
-        "can't travel",
-        "limited mobility",
-        "mobility problem",
-        "cannot walk",
-    ]
-
-    for keyword in mobility_keywords:
-        if keyword in text:
-            profile["mobility_constraints"].append(
-                keyword
-            )
-
-    return profile
+    p = {"education":None,"family_occupation":None,"current_livelihood":None,"skills":[],"interests":[],"mobility_constraints":[],"employment_preference":None,"district":None,"state":None,"experience_years":None}
+    education = [("12th", ["12th","twelfth","higher secondary","बारहवीं","બારમું"]),("10th",["10th","tenth","secondary","दसवीं","દસમું"]),("Graduate",["graduate","graduation","degree","સ્નાતક","स्नातक"])]
+    for value, aliases in education:
+        if any(a in text for a in aliases): p["education"]=value; break
+    occupations=["electrician","farmer","tailor","carpenter","plumber","driver","mason","welder"]
+    for x in occupations:
+        if x in text: p["family_occupation"]=x.title(); break
+    if "farm" in text or "खेती" in text or "ખેતી" in text: p["current_livelihood"]="Agriculture"
+    elif "tailor" in text or "sewing" in text or "દરજી" in text: p["current_livelihood"]="Tailoring"
+    p["skills"]=[x["canonical"] for x in normalize_skills(transcript)]
+    interest_terms={"electrical":"Electrical","solar":"Solar","farming":"Agriculture","tailoring":"Tailoring","carpentry":"Carpentry","plumbing":"Plumbing","welding":"Welding","computer":"Digital Work"}
+    p["interests"]=[v for k,v in interest_terms.items() if k in text]
+    if any(x in text for x in ["self employment","self-employment","business","own shop","પોતાનો ધંધો","अपना व्यवसाय"]): p["employment_preference"]="self_employment"
+    elif any(x in text for x in ["job","employment","salary","નોકરી","नौकरी"]): p["employment_preference"]="wage_employment"
+    if any(x in text for x in ["cannot travel","can't travel","limited mobility","mobility problem","ઘરેથી","घर से"]): p["mobility_constraints"].append("limited_travel")
+    districts=["ahmedabad","surat","vadodara","rajkot","gandhinagar","bhavnagar","jamnagar","mehsana","anand","kheda"]
+    states=["gujarat","maharashtra","rajasthan","madhya pradesh","delhi","uttar pradesh"]
+    for d in districts:
+        if d in text: p["district"]=d.title(); break
+    for st in states:
+        if st in text: p["state"]=st.title(); break
+    return p

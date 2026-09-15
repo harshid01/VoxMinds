@@ -1,117 +1,24 @@
-from app.database import Base, SessionLocal, engine
-from app.db_models import JobRole, Competency
+from app.database import Base, engine, SessionLocal
+from app.db_models import JobRole, Competency, Opportunity
 
+ROLES=[
+("DEMO-ELECTRICAL-001","Electrical Technician","Electrical","DEMO","DEMO RECORD - VERIFY OFFICIAL SOURCE",["Electrical Repair","Electrical Maintenance","Electrical Safety","Domestic Wiring"]),
+("DEMO-SOLAR-001","Solar Technician","Renewable Energy","DEMO","DEMO RECORD - VERIFY OFFICIAL SOURCE",["Electrical Wiring","Solar Installation","Solar Maintenance","Electrical Safety"]),
+("DEMO-TAILOR-001","Tailoring Professional","Apparel","DEMO","DEMO RECORD - VERIFY OFFICIAL SOURCE",["Sewing","Garment Stitching","Tailoring"]),
+("DEMO-CARPENTRY-001","Carpenter","Construction","DEMO","DEMO RECORD - VERIFY OFFICIAL SOURCE",["Carpentry","Woodworking","Furniture Making"]),
+("DEMO-DIGITAL-001","Digital Service Assistant","IT-ITeS","DEMO","DEMO RECORD - VERIFY OFFICIAL SOURCE",["Digital Literacy","Computer Operations","Office Productivity"])]
+OPPS=[
+("Ahmedabad","Gujarat","Electrical Technician","high",320,180,12000,22000,"medium"),("Ahmedabad","Gujarat","Solar Technician","high",140,100,14000,26000,"high"),("Ahmedabad","Gujarat","Tailoring Professional","medium",180,250,9000,18000,"high"),("Ahmedabad","Gujarat","Carpenter","medium",120,90,12000,22000,"high"),("Ahmedabad","Gujarat","Digital Service Assistant","high",210,160,10000,20000,"medium"),("Surat","Gujarat","Tailoring Professional","high",300,220,10000,20000,"high"),("Surat","Gujarat","Electrical Technician","medium",180,150,12000,22000,"medium")]
 
-Base.metadata.create_all(bind=engine)
-
-
-DEMO_JOB_ROLES = [
-    {
-        "job_role_code": "DEMO-ELECTRICAL-001",
-        "title": "Electrical Technician",
-        "sector": "Electronics & Hardware",
-        "nsqf_level": "DEMO",
-        "qualification_title": "DEMO RECORD - VERIFY OFFICIAL SOURCE",
-        "description": (
-            "Demonstration job role for testing VoxMinds matching."
-        ),
-        "source": "DEMO_DATA_NOT_OFFICIAL",
-        "competencies": [
-            "Basic electrical safety",
-            "Electrical wiring",
-            "Use of electrical tools",
-            "Basic fault identification",
-        ],
-    },
-    {
-        "job_role_code": "DEMO-SOLAR-001",
-        "title": "Solar Technician",
-        "sector": "Green Jobs",
-        "nsqf_level": "DEMO",
-        "qualification_title": "DEMO RECORD - VERIFY OFFICIAL SOURCE",
-        "description": (
-            "Demonstration job role for testing solar-related matching."
-        ),
-        "source": "DEMO_DATA_NOT_OFFICIAL",
-        "competencies": [
-            "Solar system basics",
-            "Basic electrical safety",
-            "Solar installation",
-            "Basic maintenance",
-        ],
-    },
-    {
-        "job_role_code": "DEMO-TAILOR-001",
-        "title": "Tailoring Professional",
-        "sector": "Apparel",
-        "nsqf_level": "DEMO",
-        "qualification_title": "DEMO RECORD - VERIFY OFFICIAL SOURCE",
-        "description": (
-            "Demonstration job role for testing tailoring matching."
-        ),
-        "source": "DEMO_DATA_NOT_OFFICIAL",
-        "competencies": [
-            "Fabric handling",
-            "Sewing machine operation",
-            "Garment measurement",
-            "Basic garment finishing",
-        ],
-    },
-]
-
-
-def seed_database():
-    db = SessionLocal()
-
+def seed():
+    Base.metadata.create_all(bind=engine); db=SessionLocal()
     try:
-        for role_data in DEMO_JOB_ROLES:
-
-            existing = (
-                db.query(JobRole)
-                .filter(
-                    JobRole.job_role_code
-                    == role_data["job_role_code"]
-                )
-                .first()
-            )
-
-            if existing:
-                continue
-
-            role = JobRole(
-                job_role_code=role_data["job_role_code"],
-                title=role_data["title"],
-                sector=role_data["sector"],
-                nsqf_level=role_data["nsqf_level"],
-                qualification_title=(
-                    role_data["qualification_title"]
-                ),
-                description=role_data["description"],
-                source=role_data["source"],
-            )
-
-            db.add(role)
-
-            db.flush()
-
-            for competency_name in role_data["competencies"]:
-                competency = Competency(
-                    job_role_id=role.id,
-                    name=competency_name,
-                    description=(
-                        f"Demo competency: {competency_name}"
-                    ),
-                )
-
-                db.add(competency)
-
-        db.commit()
-
-        print("NSQF demo knowledge base seeded successfully.")
-
-    finally:
-        db.close()
-
-
-if __name__ == "__main__":
-    seed_database()
+      if db.query(JobRole).count()==0:
+        for code,title,sector,level,qual,comps in ROLES:
+          r=JobRole(job_role_code=code,title=title,sector=sector,nsqf_level=level,qualification_title=qual,description="Demonstration role; replace with verified official NSQF/QP data before production.",source="DEMO_DATA_NOT_OFFICIAL",training_duration_weeks=10); db.add(r); db.flush()
+          for c in comps: db.add(Competency(job_role_id=r.id,name=c,description="Demo competency"))
+      if db.query(Opportunity).count()==0:
+        for d,s,r,level,dem,cap,w1,w2,ent in OPPS: db.add(Opportunity(district=d,state=s,role_title=r,demand_level=level,demand_count=dem,training_capacity=cap,wage_min=w1,wage_max=w2,enterprise_fit=ent))
+      db.commit(); print("VoxMinds demo knowledge base seeded.")
+    finally: db.close()
+if __name__=="__main__": seed()
