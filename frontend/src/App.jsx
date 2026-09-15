@@ -10,7 +10,7 @@ function Home() {
       <h1>VoxMinds</h1>
 
       <p>
-        Your Voice. Your Skills. Your Livelihood.
+        Your Voice. Your Skills. Your Livelihood Prachi.
       </p>
 
       <Link to="/assessment">
