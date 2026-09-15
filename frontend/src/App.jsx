@@ -1,41 +1,4 @@
-import { Routes, Route, Link } from "react-router-dom";
-import VoiceInterview from "./pages/VoiceInterview";
-import Profile from "./pages/Profile";
-import Recommendations from "./pages/Recommendations";
-import Roadmap from "./pages/Roadmap";
-
-function Home() {
-  return (
-    <div>
-      <h1>VoxMinds</h1>
-
-      <p>
-        Your Voice. Your Skills. Your Livelihood Prachi.
-      </p>
-
-      <Link to="/assessment">
-        <button>
-          🎤 Start Voice Assessment
-        </button>
-      </Link>
-    </div>
-  );
-}
-
-function App() {
-  return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-
-      <Route
-        path="/assessment"
-        element={<VoiceInterview />}
-      />
-      <Route path="/profile" element={<Profile />}/>
-      <Route path="/recommendations" element={<Recommendations />}/>
-      <Route path="/roadmap" element={<Roadmap />}/>
-    </Routes>
-  );
-}
-
-export default App;
+import {NavLink,Route,Routes,useLocation} from 'react-router-dom';import {LayoutDashboard,Mic2,UserRound,Sparkles,Map,BookOpen,Menu,ShieldCheck} from 'lucide-react';import {useState} from 'react';import VoiceInterview from './pages/VoiceInterview';import Dashboard from './pages/Dashboard';import Profile from './pages/Profile';import Recommendations from './pages/Recommendations';import Roadmap from './pages/Roadmap';import Training from './pages/Training';
+const nav=[['/','Overview',LayoutDashboard],['/assessment','Voice assessment',Mic2],['/profile','Beneficiary profile',UserRound],['/recommendations','AI pathways',Sparkles],['/roadmap','Livelihood roadmap',Map],['/training','Training',BookOpen],['/dashboard','Programme dashboard',ShieldCheck]];
+function Shell(){const [open,setOpen]=useState(false);const loc=useLocation();return <div className='app'><aside className={open?'sidebar open':'sidebar'}><div className='brand'><div className='logo'>V</div><div><b>VoxMinds</b><span>Livelihood intelligence</span></div></div><nav>{nav.map(([to,label,I])=><NavLink key={to} to={to} onClick={()=>setOpen(false)} className={({isActive})=>isActive?'active':''}><I size={18}/>{label}</NavLink>)}</nav><div className='side-note'><small>SIH 2026 • SIH26097</small><p>Voice-first, explainable livelihood decision support.</p></div></aside><main className='main'><header><button className='mobile-menu' onClick={()=>setOpen(!open)}><Menu/></button><div><span className='crumb'>VoxMinds</span><b>{nav.find(x=>x[0]===loc.pathname)?.[1]||'Overview'}</b></div><div className='header-badge'>Prototype • Demo data</div></header><div className='content'><Routes><Route path='/' element={<Dashboard home/>}/><Route path='/assessment' element={<VoiceInterview/>}/><Route path='/profile' element={<Profile/>}/><Route path='/recommendations' element={<Recommendations/>}/><Route path='/roadmap' element={<Roadmap/>}/><Route path='/training' element={<Training/>}/><Route path='/dashboard' element={<Dashboard/>}/></Routes></div></main></div>}
+export default function App(){return <Shell/>}
